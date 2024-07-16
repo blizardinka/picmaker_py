@@ -1,50 +1,87 @@
-from PIL import Image, ImageDraw, ImageFont
+import sys
+import math
+from PySide6.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QWidget, QLineEdit, QPushButton
+from PySide6.QtGui import QPixmap
+from PIL import Image, ImageDraw
+from PIL.ImageQt import ImageQt
 
-def create_diagonal_stripes_frame(image, frame_thickness, colors):
-    draw = ImageDraw.Draw(image)
-    width, height = image.size
-    num_colors = len(colors)
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
 
-    for i in range(0, width + height, frame_thickness):
-        color = colors[(i // frame_thickness) % num_colors]
-        draw.line([(i, 0), (0, i)], fill=color, width=frame_thickness)
-        draw.line([(width - i, height), (width, height - i)], fill=color, width=frame_thickness)
-        draw.line([(0, i), (i, height)], fill=color, width=frame_thickness)
-        draw.line([(width, i), (width - i, 0)], fill=color, width=frame_thickness)
+        self.setWindowTitle("Diagonal Border Image Creator")
+        self.setGeometry(100, 100, 800, 450)
 
-def create_colorful_frame_image(output_path, text="keyesc.xyz"):
-    # Define the image size and colors
-    image_width, image_height = 1024, 512
-    original_frame_thickness = 50
-    frame_thickness = int(original_frame_thickness * 0.7)  # Reduce thickness by 30%
-    colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
-    
-    # Create a new image with a white background
-    image = Image.new('RGB', (image_width, image_height), 'white')
-    
-    # Draw the colorful frame with diagonal stripes
-    create_diagonal_stripes_frame(image, frame_thickness, colors)
-    
-    # Draw the inner white rectangle
-    draw = ImageDraw.Draw(image)
-    draw.rectangle([frame_thickness, frame_thickness, image_width - frame_thickness, image_height - frame_thickness], fill='white')
-    
-    # Load a font
-    font = ImageFont.load_default()
-    
-    # Calculate text size and position using textbbox
-    text_bbox = draw.textbbox((0, 0), text, font=font)
-    text_width = text_bbox[2] - text_bbox[0]
-    text_height = text_bbox[3] - text_bbox[1]
-    text_x = (image_width - text_width) // 2
-    text_y = (image_height - text_height) // 2
-    
-    # Draw the text in the center of the image
-    draw.text((text_x, text_y), text, fill='grey', font=font)
-    
-    # Save the image to a file
-    image.save(output_path)
+        self.layout = QVBoxLayout()
 
-# Create the image with a colorful frame and centered text
-desired_output_path = 'output_image.png'  # Change this to your desired path
-create_colorful_frame_image(desired_output_path)
+        self.angle_label = QLabel("Angle:")
+        self.layout.addWidget(self.angle_label)
+        self.angle_entry = QLineEdit("30")
+        self.layout.addWidget(self.angle_entry)
+
+        self.thickness_label = QLabel("Frame Thickness:")
+        self.layout.addWidget(self.thickness_label)
+        self.thickness_entry = QLineEdit("20")
+        self.layout.addWidget(self.thickness_entry)
+
+        self.border_label = QLabel("Border Size:")
+        self.layout.addWidget(self.border_label)
+        self.border_entry = QLineEdit("40")
+        self.layout.addWidget(self.border_entry)
+
+        self.update_button = QPushButton("Update Image")
+        self.update_button.clicked.connect(self.update_image)
+        self.layout.addWidget(self.update_button)
+
+        self.image_label = QLabel()
+        self.layout.addWidget(self.image_label)
+
+        container = QWidget()
+        container.setLayout(self.layout)
+        self.setCentralWidget(container)
+
+    def create_image_with_diagonal_border(self, width, height, frame_thickness, border_size, colors, angle):
+        scale_factor = 8
+        high_res_width = width * scale_factor
+        high_res_height = height * scale_factor
+        high_res_frame_thickness = frame_thickness * scale_factor
+        high_res_border_size = border_size * scale_factor
+
+        angle_radians = math.radians(angle)
+        image = Image.new("RGB", (high_res_width, high_res_height), (255, 255, 255))
+        draw = ImageDraw.Draw(image)
+
+        tan_angle = math.tan(angle_radians)
+        extended_range = max(high_res_width, high_res_height) * 4
+
+        for idx, i in enumerate(range(-extended_range, extended_range, high_res_frame_thickness)):
+            color = colors[idx % len(colors)]
+            start_x = i
+            start_y = -extended_range
+            end_x = i + extended_range / tan_angle
+            end_y = extended_range
+            draw.line([(start_x, start_y), (end_x, end_y)], fill=color, width=high_res_frame_thickness)
+
+        draw.rectangle([high_res_border_size, high_res_border_size, high_res_width - high_res_border_size, high_res_height - high_res_border_size], fill=(255, 255, 255))
+        image = image.resize((width, height), Image.LANCZOS)
+        return image
+
+    def update_image(self):
+        angle = int(self.angle_entry.text())
+        frame_thickness = int(self.thickness_entry.text())
+        border_size = int(self.border_entry.text())
+        colors = [(0, 0, 0), (51, 129, 138), (160, 236, 246), (249, 147, 78), (236, 249, 247)]
+        image = self.create_image_with_diagonal_border(800, 400, frame_thickness, border_size, colors, angle)
+        qimage = ImageQt(image)
+        pixmap = QPixmap.fromImage(qimage)
+        self.image_label.setPixmap(pixmap)
+        
+        # Save the image to a file
+        output_path = "output_image.png"
+        image.save(output_path)
+        print(f"Image saved to {output_path}")
+
+app = QApplication(sys.argv)
+window = MainWindow()
+window.show()
+sys.exit(app.exec_())
