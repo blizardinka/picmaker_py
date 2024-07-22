@@ -1,0 +1,53 @@
+from PIL import Image, ImageDraw
+import math
+
+def create_image(width, height):
+    """Create a blank image with white background."""
+    return Image.new("RGB", (width, height), (255, 255, 255))
+
+def draw_border(draw, width, height, border_size, fill_color):
+    """Draw a border around the image."""
+    draw.rectangle([border_size, border_size, width - border_size, height - border_size], fill=fill_color)
+
+def draw_diagonal_stripes(draw, width, height, frame_thickness, colors, angle):
+    """Draw diagonal stripes on the image."""
+    scale_factor = 8
+    high_res_width = width * scale_factor
+    high_res_height = height * scale_factor
+    high_res_frame_thickness = frame_thickness * scale_factor // 3
+
+    angle_radians = math.radians(angle)
+    tan_angle = math.tan(angle_radians)
+    extended_range = max(high_res_width, high_res_height) * 4
+
+    for idx, i in enumerate(range(-extended_range, extended_range, high_res_frame_thickness)):
+        color = colors[idx % len(colors)]
+        start_x = i
+        start_y = -extended_range
+        end_x = i + extended_range / tan_angle
+        end_y = extended_range
+        draw.line([(start_x, start_y), (end_x, end_y)], fill=color, width=high_res_frame_thickness)
+
+def create_image_with_diagonal_border(width, height, frame_thickness, border_size, colors, angle):
+    """Create an image with a border and diagonal stripes."""
+    image = create_image(width, height)
+    draw = ImageDraw.Draw(image)
+
+    draw_diagonal_stripes(draw, width, height, frame_thickness, colors, angle)
+    draw_border(draw, width, height, border_size, (255, 255, 255))
+
+    return image
+
+# Example usage
+if __name__ == "__main__":
+    width, height = 800, 400
+    frame_thickness = 20
+    border_size = 40
+    colors = [(0, 0, 0), (51, 129, 138), (160, 236, 246), (249, 147, 78), (236, 249, 247)]
+    angle = 30
+
+    image = create_image_with_diagonal_border(width, height, frame_thickness, border_size, colors, angle)
+    # Save the image to a file instead of showing it
+    output_path = "output_image.png"
+    image.save(output_path)
+    print(f"Image saved to {output_path}")
