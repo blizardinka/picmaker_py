@@ -103,7 +103,7 @@ def calculate_aligned_position(draw, line, font, max_text_width, x, y, align):
     else:  # Default is left alignment
         return x, y
 
-def draw_wrapped_text(image, word, definition, border_size, word_font_size=60, def_font_size=40, font_path=None, text_color="black", align="left", word_padding=20, def_padding=10, footer_text="finesentence.com", footer_font_size=20):
+def draw_wrapped_text(image, word, definition, border_size, word_font_size, def_font_size, font_path=None, text_color="black", align="left", word_padding=20, def_padding=10, footer_text="finesentence.com", footer_font_size=20):
     """
     Draw wrapped text on the given image at the specified position with customizable options.
 
@@ -195,7 +195,7 @@ def main():
             # Draw the text on the image with enhancements
             font_path = "Lato-Regular.ttf"  # Ensure this path is correct
             text_color = "#1F2937"  # Dark blue color similar to the image
-            image = draw_wrapped_text(image, word, definition, border_size, word_font_size=40, def_font_size=20, font_path=font_path, text_color=text_color, align="left", word_padding=30, def_padding=15)
+            image = draw_wrapped_text(image, word, definition, border_size, word_font_size=70, def_font_size=40, font_path=font_path, text_color=text_color, align="left", word_padding=30, def_padding=15)
 
             # Save the image to a file
             output_path = os.path.join(output_dir, f"word_image_{index + 1}.png")
