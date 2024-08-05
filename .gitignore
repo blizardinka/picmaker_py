@@ -4,6 +4,8 @@ myenv/
 # Ignore generated images directory
 generated_images/
 
+archiver
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
